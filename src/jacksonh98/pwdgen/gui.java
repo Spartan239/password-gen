@@ -17,10 +17,22 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
+import java.awt.CardLayout;
+
+import net.miginfocom.swing.MigLayout;
+
+import java.awt.BorderLayout;
+
+import javax.swing.JProgressBar;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 public class gui extends JFrame implements ActionListener
 {
@@ -40,10 +52,13 @@ public class gui extends JFrame implements ActionListener
 	JCheckBox g_jrNum = new JCheckBox("Use numbers");
 	JCheckBox g_jrAlph = new JCheckBox("Use letters");
 	
-	JLabel g_jlError = new JLabel("");
+	JProgressBar g_jpEstStrength = new JProgressBar();
 	
-	JSeparator g_jsSeparator = new JSeparator(JSeparator.HORIZONTAL);
-	Dimension g_diSeparator = g_jsSeparator.getPreferredSize();
+	JMenuBar g_mbMain = new JMenuBar();
+	JMenuItem g_miInfo = new JMenuItem("Info");
+	
+	JLabel g_jlError = new JLabel("");
+	//Dimension g_diSeparator = g_jsSeparator.getPreferredSize();
 	
 	int 
 		g_iMaxSize = 8, 
@@ -67,51 +82,81 @@ public class gui extends JFrame implements ActionListener
 	
 	gui()
 	{
+		g_jtMaxSym.setBounds(133, 73, 30, 20);
 		g_jtMaxSym.setEnabled(false);
+		g_jtMaxAlph.setBounds(133, 23, 30, 20);
 		g_jtMaxAlph.setEnabled(false);
+		g_jtMaxNum.setBounds(133, 47, 30, 20);
 		g_jtMaxNum.setEnabled(false);
+		g_jtPassword.setBounds(6, 193, 326, 20);
 		g_jtPassword.setEnabled(false);
 		g_jtPassword.setText("Click generate!");
+		g_jtLength.setBounds(6, 137, 30, 20);
 		g_jtLength.setText(String.valueOf(g_iMaxSize));
 		g_jtLength.setEnabled(false);
 		
-		g_diSeparator.height = g_jtPassword.getPreferredSize().height;
-		g_jsSeparator.setPreferredSize(g_diSeparator); 
+		//g_diSeparator.height = g_jtPassword.getPreferredSize().height;
+		g_jrAlph.setBounds(6, 22, 121, 23);
 		
 		
 		g_jrAlph.setToolTipText("Use letters in generated password");
+		g_jrNum.setBounds(6, 46, 121, 23);
 		g_jrNum.setToolTipText("Use numbers in generated password");
+		g_jrSym.setBounds(6, 72, 121, 23);
 		g_jrSym.setToolTipText("Use symbols in generated password");
 		g_jtMaxAlph.setToolTipText("Specify how many letters you want (must be enabled)");
 		g_jtMaxNum.setToolTipText("Specify how many numbers you want (must be enabled)");
 		g_jtMaxSym.setToolTipText("Specify how many symbols you want (must be enabled)");
 		
-		g_jfMain.setSize(470, 300);
+		g_jfMain.setSize(471, 324);
 		g_jfMain.setTitle("Password Generator");
 		g_jfMain.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		g_jpPanel.setLayout(new GridLayout(13, 2));
+		g_jpPanel.setLayout(null);
 		g_jpPanel.add(g_jrAlph);
 		g_jpPanel.add(g_jtMaxAlph);
-		g_jpPanel.add(g_jsSeparator);
 		g_jpPanel.add(g_jrNum);
 		g_jpPanel.add(g_jtMaxNum);
 		g_jpPanel.add(g_jrSym);
 		g_jpPanel.add(g_jtMaxSym);
-		g_jpPanel.add(g_jsSeparator);
-		g_jpPanel.add(new JLabel("Length:"));
+		JLabel g_jlLength = new JLabel("Length: (Auto detects length)");
+		g_jlLength.setBounds(6, 104, 194, 14);
+		g_jpPanel.add(g_jlLength);
 		g_jpPanel.add(g_jtLength);
-		g_jpPanel.add(new JLabel("Password:"));
+		JLabel g_jlPassword = new JLabel("Password:");
+		g_jlPassword.setBounds(6, 168, 326, 14);
+		g_jpPanel.add(g_jlPassword);
 		g_jpPanel.add(g_jtPassword);
+		g_jbGenerate.setBounds(336, 193, 103, 23);
 		g_jpPanel.add(g_jbGenerate);
+		g_jlError.setBounds(434, 69, 0, 0);
 		g_jpPanel.add(g_jlError);
-		g_jfMain.add(g_jpPanel);
+		g_jfMain.getContentPane().add(g_jpPanel);
+	
+		g_jpEstStrength.setBounds(299, 240, 146, 14);
+		g_jpPanel.add(g_jpEstStrength);
 		g_jfMain.setVisible(true);
+		
+		g_jpEstStrength.setMinimum(0);
+		g_jpEstStrength.setMaximum(100);
+		
+		JLabel lblPasswordStrengthEstimation = new JLabel("Password strength estimation:");
+		lblPasswordStrengthEstimation.setBounds(89, 240, 200, 14);
+		g_jpPanel.add(lblPasswordStrengthEstimation);
 		
 		g_jbGenerate.addActionListener(this);
 		g_jrAlph.addActionListener(this);
 		g_jrNum.addActionListener(this);
 		g_jrSym.addActionListener(this);
 		g_jfMain.setLocationRelativeTo(null);
+		g_jfMain.setResizable(false);
+		
+		g_jfMain.setJMenuBar(g_mbMain);
+		
+		JMenu g_mnHelp = new JMenu("Help");
+		g_mbMain.add(g_mnHelp);
+		
+		g_mnHelp.add(g_miInfo);
+		g_miInfo.addActionListener(this);
 	}
 
 	@Override
@@ -120,7 +165,8 @@ public class gui extends JFrame implements ActionListener
 		Object src = e.getSource();
 		if(src == g_jbGenerate) {
 			if(g_iBoxesSelected <= 0) {
-				g_jlError.setText("Could not generate blank password (0 boxes checked)");
+				//g_jlError.setText("Could not generate blank password (0 boxes checked)");
+				JOptionPane.showMessageDialog(null, "Could not generate blank password (0 boxes checked)");
 			}
 			else {
 				g_jlError.setText("");
@@ -186,6 +232,9 @@ public class gui extends JFrame implements ActionListener
 				g_iMaxSym = 0;
 			}
 		}
+		else if(src == g_miInfo) {
+			JOptionPane.showMessageDialog(null, "This software was developed by Jackson Harris.\nPassword strength is in no way guaranteed and common sense should be used when selecting passwords.\nLicensed under the Apache License, Version 2.0.\n");
+		}
 	}
 	
 	private String generate()
@@ -239,7 +288,7 @@ public class gui extends JFrame implements ActionListener
 		if(g_iMaxAlph > 0) {
 			for(int i = 0; i < g_iMaxAlph; i++) {
 				algo.add(cLetters[i]);
-				System.out.printf("%c(%d) added to array (%c)\n", cLetters[i], (int) cLetters[i], algo.get(iSlot));
+				//System.out.printf("%c(%d) added to array (%c)\n", cLetters[i], (int) cLetters[i], algo.get(iSlot));
 				iSlot++;
 			}
 		}
@@ -247,14 +296,14 @@ public class gui extends JFrame implements ActionListener
 		if(g_iMaxNum > 0) {
 			for(int i = 0; i < g_iMaxNum; i++) {
 				algo.add(cNumbers[i]);
-				System.out.printf("%c(%d) added to array (%c)\n", cNumbers[i], (int) cNumbers[i], algo.get(iSlot));
+				//System.out.printf("%c(%d) added to array (%c)\n", cNumbers[i], (int) cNumbers[i], algo.get(iSlot));
 				iSlot++;
 			}
 		}
 		if(g_iMaxSym > 0) {
 			for(int i = 0; i < g_iMaxSym; i++) {
 				algo.add(cSymbols[i]);
-				System.out.printf("%c(%d) added to array (%c)\n", cSymbols[i], (int) cSymbols[i], algo.get(iSlot));
+				//System.out.printf("%c(%d) added to array (%c)\n", cSymbols[i], (int) cSymbols[i], algo.get(iSlot));
 				iSlot++;
 			}
 		}
@@ -266,7 +315,33 @@ public class gui extends JFrame implements ActionListener
 		}
 		
 		g_szFinal = String.valueOf(cFinal);
-		System.out.printf("Generated password: %s (%d, %d, %d, %d, %d, %d)\n", g_szFinal, iNum, g_iMaxNum, iAlph, g_iMaxAlph, iSym, g_iMaxSym);
+		//System.out.printf("Generated password: %s (%d, %d, %d, %d, %d, %d)\n", g_szFinal, iNum, g_iMaxNum, iAlph, g_iMaxAlph, iSym, g_iMaxSym);
+		
+		
+		//Generates an estimated password strength based on recommended passwords (8+ characters, at least 2 symbols/numbers)
+		int 
+			iPercent = 0;
+		
+		if(cFinal.length > 8) iPercent = 20;
+		else if(cFinal.length < 8) iPercent = 5;
+		
+		if(cFinal.length > 0) {
+			if(cLetters.length >= 8) iPercent += 10;
+			if(cNumbers.length >= 2) iPercent += 10;
+			if(cSymbols.length >= 2) iPercent += 10;
+			
+			if(cNumbers.length - 2 >  0) iPercent += cNumbers.length;
+			if(cSymbols.length - 2 > 0) iPercent += cSymbols.length;
+			if(cLetters.length - 8 > 0) iPercent += (cLetters.length/2);
+			
+			if(iPercent > 100) iPercent = 100;
+		}
+		else 
+			iPercent = 0;
+		
+		g_jpEstStrength.setValue(iPercent);
+		g_jpEstStrength.setStringPainted(true);
+		
 		return g_szFinal;
 	}
 	
